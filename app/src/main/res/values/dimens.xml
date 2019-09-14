@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="width_situ_icon">64dp</dimen>
+    <dimen name="height_situ_icon">64dp</dimen>
+
+    <dimen name="size_situ_text">20sp</dimen>
+    <dimen name="size_apply_text">16sp</dimen>
+    <dimen name="size_apply_margin">4dp</dimen>
+    <dimen name="size_apply_padding">4dp</dimen>
+
+    <dimen name="size_noti_icon">32dp</dimen>
+    <dimen name="size_noti_width">48dp</dimen>
+</resources>

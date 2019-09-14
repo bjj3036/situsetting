@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">시츄세팅</string>
+
+    <string name="string_home">평상시</string>
+    <string name="string_outdoor">외출</string>
+    <string name="string_night">밤</string>
+    <string name="string_alpha">기타</string>
+
+    <string name="string_setting">설정</string>
+    <string name="string_setting_save">설정 저장</string>
+
+    <string name="notification_channelId">Situsetting_Notification</string>
+
+    <string name="preference_name">Situsetting</string>
+    <string name="notification_state">notification_state</string>
+
+    <string name="string_copyright">Copyright 2019.Junjae Bae.All rights reserved</string>
+
+    <string name="sentence_manual">설정 저장 클릭 시 현재 설정 정보를 저장\n\n저장되는 설정 정보: 밝기/미디어 음량/벨소리 음량</string>
+</resources>

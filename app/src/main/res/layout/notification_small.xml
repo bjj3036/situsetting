@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="64dp"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
+
+    <LinearLayout
+        android:id="@+id/noti_home"
+        android:layout_width="@dimen/size_noti_width"
+        android:layout_height="match_parent"
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="@dimen/size_noti_icon"
+            android:layout_height="@dimen/size_noti_icon"
+            android:adjustViewBounds="true"
+            android:src="@drawable/ic_home" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/string_home" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/noti_outdoor"
+        android:layout_width="@dimen/size_noti_width"
+        android:layout_height="match_parent"
+        android:layout_marginStart="8dp"
+        android:layout_toEndOf="@+id/noti_home"
+        android:layout_centerVertical="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="@dimen/size_noti_icon"
+            android:layout_height="@dimen/size_noti_icon"
+            android:adjustViewBounds="true"
+            android:src="@drawable/ic_cloud" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/string_outdoor" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/noti_night"
+        android:layout_width="@dimen/size_noti_width"
+        android:layout_height="match_parent"
+        android:layout_marginStart="8dp"
+        android:layout_centerVertical="true"
+        android:layout_toEndOf="@+id/noti_outdoor"
+        android:gravity="center"
+        android:orientation="vertical">
+
+
+        <ImageView
+            android:layout_width="@dimen/size_noti_icon"
+            android:layout_height="@dimen/size_noti_icon"
+            android:adjustViewBounds="true"
+            android:src="@drawable/ic_brightness" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/string_night" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/noti_alpha"
+        android:layout_width="@dimen/size_noti_width"
+        android:layout_height="match_parent"
+        android:layout_marginStart="8dp"
+        android:layout_centerVertical="true"
+        android:layout_toEndOf="@+id/noti_night"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="@dimen/size_noti_icon"
+            android:layout_height="@dimen/size_noti_icon"
+            android:adjustViewBounds="true"
+            android:src="@drawable/ic_add" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/string_alpha" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/noti_setting"
+        android:layout_width="@dimen/size_noti_icon"
+        android:layout_height="@dimen/size_noti_icon"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:adjustViewBounds="true"
+        android:src="@drawable/ic_settings" />
+</RelativeLayout>
