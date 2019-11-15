@@ -1,16 +1,10 @@
 package kr.hs.dgsw.situsetting.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 
 import android.app.AlertDialog;
-import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -18,39 +12,53 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
-import android.widget.RemoteViews;
 import android.widget.Toast;
 
-import kr.hs.dgsw.situsetting.services.ApplyService;
+import javax.inject.Inject;
+
+import kr.hs.dgsw.situsetting.InitAppcliation;
+import kr.hs.dgsw.situsetting.SettingRepository;
+import kr.hs.dgsw.situsetting.di.components.ActivityComponent;
+import kr.hs.dgsw.situsetting.di.components.DaggerActivityComponent;
+import kr.hs.dgsw.situsetting.di.modules.ActivityModule;
+import kr.hs.dgsw.situsetting.utils.NotificationUtil;
 import kr.hs.dgsw.situsetting.R;
 import kr.hs.dgsw.situsetting.SettingBean;
 import kr.hs.dgsw.situsetting.SettingDBHelper;
 import kr.hs.dgsw.situsetting.SettingSituation;
-import kr.hs.dgsw.situsetting.SettingUtil;
+import kr.hs.dgsw.situsetting.utils.SettingUtil;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "Situsetting";
     private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 10;
 
-    private SettingDBHelper dbHelper;
-    private SharedPreferences sp;
-    private SettingBean setting;
+    @Inject
+    SettingRepository dbHelper;
+    @Inject
+    SharedPreferences sp;
+    @Inject
+    SettingUtil settingUtil;
+    @Inject
+    NotificationUtil notificationUtil;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sp = getSharedPreferences(getString(R.string.preference_name), MODE_PRIVATE);
-        if (!sp.contains(getString(R.string.notification_state))) {
-            firstBoot();
-        }else if (sp.getBoolean(getString(R.string.notification_state), false))
-            createNotification();
+        ActivityComponent component = DaggerActivityComponent.builder()
+                .appComponent(InitAppcliation.get(getApplicationContext()).getComponent())
+                .activityModule(new ActivityModule(this))
+                .build();
 
-        dbHelper = new SettingDBHelper(this, "settingDB", null, 1);
+        component.inject(this);
+
+        if (!sp.contains(getString(R.string.notification_state)))
+            firstBoot();
+        else if (sp.getBoolean(getString(R.string.notification_state), false))
+            notificationUtil.createNotification();
 
         requestPermissions();
-
     }
 
     private void firstBoot() {
@@ -72,54 +80,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(intent, 2);
             }
         }
-
     }
 
-    private void createNotification() {
-        Intent intentHome = new Intent(this, ApplyService.class);
-        intentHome.putExtra(ApplyService.EXTRA_SITUATION_ID, SettingSituation.HOME.getId());
-        Intent intentOutdoor = new Intent(this, ApplyService.class);
-        intentOutdoor.putExtra(ApplyService.EXTRA_SITUATION_ID, SettingSituation.OUTDOOR.getId());
-        Intent intentNight = new Intent(this, ApplyService.class);
-        intentNight.putExtra(ApplyService.EXTRA_SITUATION_ID, SettingSituation.NIGHT.getId());
-        Intent intentAlpha = new Intent(this, ApplyService.class);
-        intentAlpha.putExtra(ApplyService.EXTRA_SITUATION_ID, SettingSituation.ALPHA.getId());
-        Intent intentMain = new Intent(this, MainActivity.class);
-
-        PendingIntent pendingIntentHome = PendingIntent.getService(this, 1, intentHome, PendingIntent.FLAG_CANCEL_CURRENT);
-        PendingIntent pendingIntentOutdoor = PendingIntent.getService(this, 2, intentOutdoor, PendingIntent.FLAG_CANCEL_CURRENT);
-        PendingIntent pendingIntentNight = PendingIntent.getService(this, 3, intentNight, PendingIntent.FLAG_CANCEL_CURRENT);
-        PendingIntent pendingIntentAlpha = PendingIntent.getService(this, 4, intentAlpha, PendingIntent.FLAG_CANCEL_CURRENT);
-        PendingIntent pendingIntentMain = PendingIntent.getActivity(this, 5, intentMain, PendingIntent.FLAG_CANCEL_CURRENT);
-
-        RemoteViews notificationLayout = new RemoteViews(getPackageName(), R.layout.notification_small);
-        notificationLayout.setOnClickPendingIntent(R.id.noti_home, pendingIntentHome);
-        notificationLayout.setOnClickPendingIntent(R.id.noti_outdoor, pendingIntentOutdoor);
-        notificationLayout.setOnClickPendingIntent(R.id.noti_night, pendingIntentNight);
-        notificationLayout.setOnClickPendingIntent(R.id.noti_alpha, pendingIntentAlpha);
-        notificationLayout.setOnClickPendingIntent(R.id.noti_setting, pendingIntentMain);
-
-        Notification customNotification = new NotificationCompat.Builder(this, getString(R.string.notification_channelId))
-                .setSmallIcon(R.drawable.situsetting_noti_icon)
-                .setShowWhen(false)
-                .setCustomContentView(notificationLayout)
-                .setOnlyAlertOnce(true)
-                .build();
-
-        customNotification.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
-        createNotificationChannel();
-        NotificationManagerCompat.from(this).notify(1, customNotification);
-    }
-
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            int importance = NotificationManager.IMPORTANCE_LOW;
-            NotificationChannel channel = new NotificationChannel(getString(R.string.notification_channelId), "Situsetting", importance);
-            channel.setDescription("test notification channel");
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
 
     public void onSettingClick(View v) {
         switch (v.getId()) {
@@ -139,23 +101,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onApplyClick(View v) {
-        SettingBean setting = null;
+        SettingBean setting;
         switch (v.getId()) {
             case R.id.layout_home:
-                setting = dbHelper.select(SettingSituation.HOME.getId());
+                setting = dbHelper.selectSetting(SettingSituation.HOME);
                 break;
             case R.id.layout_outdoor:
-                setting = dbHelper.select(SettingSituation.OUTDOOR.getId());
+                setting = dbHelper.selectSetting(SettingSituation.OUTDOOR);
                 break;
             case R.id.layout_night:
-                setting = dbHelper.select(SettingSituation.NIGHT.getId());
+                setting = dbHelper.selectSetting(SettingSituation.NIGHT);
                 break;
             case R.id.layout_alpha:
-                setting = dbHelper.select(SettingSituation.ALPHA.getId());
+                setting = dbHelper.selectSetting(SettingSituation.ALPHA);
                 break;
+            default:
+                setting = null;
         }
         if (setting != null)
-            SettingUtil.applySetting(this, setting);
+            settingUtil.applySetting(setting);
         else
             Toast.makeText(this, "저장된 정보가 없습니다", Toast.LENGTH_SHORT).show();
     }
@@ -163,27 +127,19 @@ public class MainActivity extends AppCompatActivity {
     private void confirmSave(SettingSituation situation, String type) {
         SettingBean setting;
         try {
-            setting = SettingUtil.getSetting(this);
+            setting = settingUtil.getSetting();
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
             alertDialogBuilder
                     .setTitle("설정 저장")
                     .setMessage("현재의 설정을 " + type + "(으)로 저장하시겠습니까?")
                     .setCancelable(false)
-                    .setPositiveButton("확인",
-                            new DialogInterface.OnClickListener() {
-                                public void onClick(
-                                        DialogInterface dialog, int id) {
-                                    dbHelper.setting(situation, setting);
-                                    dialog.cancel();
-                                }
-                            })
-                    .setNegativeButton("취소",
-                            new DialogInterface.OnClickListener() {
-                                public void onClick(
-                                        DialogInterface dialog, int id) {
-                                    dialog.cancel();
-                                }
-                            })
+                    .setPositiveButton("확인", (dialog, id) -> {
+                        dbHelper.insertSetting(situation, setting);
+                        dialog.cancel();
+                    })
+                    .setNegativeButton("취소", (dialog, id) -> {
+                        dialog.cancel();
+                    })
                     .show();
         } catch (Settings.SettingNotFoundException e) {
             e.printStackTrace();
@@ -198,25 +154,17 @@ public class MainActivity extends AppCompatActivity {
                 .setTitle("알림창")
                 .setMessage("알림창을 활성화 하시겠습니까?")
                 .setCancelable(false)
-                .setPositiveButton("네",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(
-                                    DialogInterface dialog, int id) {
-                                editor.putBoolean(getString(R.string.notification_state), true);
-                                editor.apply();
-                                createNotification();
-                                dialog.cancel();
-                            }
-                        })
-                .setNegativeButton("아니요",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(
-                                    DialogInterface dialog, int id) {
-                                editor.putBoolean(getString(R.string.notification_state), false);
-                                editor.apply();
-                                dialog.cancel();
-                            }
-                        })
+                .setPositiveButton("네", (dialog, id) -> {
+                    editor.putBoolean(getString(R.string.notification_state), true);
+                    editor.apply();
+                    notificationUtil.createNotification();
+                    dialog.cancel();
+                })
+                .setNegativeButton("아니요", (dialog, id) -> {
+                    editor.putBoolean(getString(R.string.notification_state), false);
+                    editor.apply();
+                    dialog.cancel();
+                })
                 .show();
     }
 

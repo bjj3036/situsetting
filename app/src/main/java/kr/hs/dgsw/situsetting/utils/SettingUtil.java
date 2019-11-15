@@ -1,4 +1,4 @@
-package kr.hs.dgsw.situsetting;
+package kr.hs.dgsw.situsetting.utils;
 
 import android.app.NotificationManager;
 import android.content.ContentResolver;
@@ -11,9 +11,16 @@ import android.provider.Settings;
 
 import androidx.annotation.Nullable;
 
-public class SettingUtil {
+import kr.hs.dgsw.situsetting.SettingBean;
 
-    public static void applySetting(Context context, SettingBean setting) {
+public class SettingUtil {
+    private Context context;
+
+    public SettingUtil(Context context) {
+        this.context = context;
+    }
+
+    public void applySetting(SettingBean setting) {
         if (setting == null)
             return;
         ContentResolver cResolver = context.getContentResolver();
@@ -35,7 +42,7 @@ public class SettingUtil {
     }
 
     @Nullable
-    public static SettingBean getSetting(Context context) throws Settings.SettingNotFoundException {
+    public SettingBean getSetting() throws Settings.SettingNotFoundException {
         ContentResolver cResolver = context.getContentResolver();
         SettingBean setting = new SettingBean();
         AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
@@ -46,7 +53,6 @@ public class SettingUtil {
             if (settingsCanWrite && n.isNotificationPolicyAccessGranted()) {
 
                 setting.setBrightness(Settings.System.getInt(cResolver, Settings.System.SCREEN_BRIGHTNESS));
-
                 setting.setMusicVolume(am.getStreamVolume(AudioManager.STREAM_MUSIC));
                 setting.setRingVolume(am.getStreamVolume(AudioManager.STREAM_RING));
                 setting.setRingerMode(am.getRingerMode());

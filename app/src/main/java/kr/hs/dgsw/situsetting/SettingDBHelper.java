@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import androidx.annotation.Nullable;
 
-public class SettingDBHelper extends SQLiteOpenHelper {
+public class SettingDBHelper extends SQLiteOpenHelper implements SettingRepository {
 
     private String table = "setting";
 
@@ -34,13 +34,6 @@ public class SettingDBHelper extends SQLiteOpenHelper {
         String sql = "drop table " + table;
         db.execSQL(sql);
         onCreate(db);
-    }
-
-    public void setting(SettingSituation situation, SettingBean setting) {
-        if (!isExists(situation.getId()))
-            insert(situation.getId(), setting);
-        else
-            update(situation.getId(), setting);
     }
 
     public long insert(String id, SettingBean bean) {
@@ -86,5 +79,24 @@ public class SettingDBHelper extends SQLiteOpenHelper {
         values.put("brightness", bean.getBrightness());
         values.put("ringerMode", bean.getRingerMode());
         return db.update(table, values, "id=?", new String[]{id});
+    }
+
+    @Override
+    public void insertSetting(SettingSituation situation, SettingBean setting) {
+        if (!isExists(situation.getId()))
+            insert(situation.getId(), setting);
+        else
+            update(situation.getId(), setting);
+
+    }
+
+    @Override
+    public SettingBean selectSetting(SettingSituation situation) {
+        return select(situation.getId());
+    }
+
+    @Override
+    public SettingBean selectSetting(String settingSituation) {
+        return select(settingSituation);
     }
 }

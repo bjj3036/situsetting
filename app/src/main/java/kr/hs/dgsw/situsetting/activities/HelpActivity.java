@@ -19,25 +19,41 @@ import android.widget.CompoundButton;
 import android.widget.RemoteViews;
 import android.widget.Switch;
 
+import javax.inject.Inject;
+
+import kr.hs.dgsw.situsetting.InitAppcliation;
+import kr.hs.dgsw.situsetting.di.components.ActivityComponent;
+import kr.hs.dgsw.situsetting.di.components.DaggerActivityComponent;
+import kr.hs.dgsw.situsetting.di.modules.ActivityModule;
 import kr.hs.dgsw.situsetting.services.ApplyService;
 import kr.hs.dgsw.situsetting.R;
 import kr.hs.dgsw.situsetting.SettingSituation;
+import kr.hs.dgsw.situsetting.utils.NotificationUtil;
+import kr.hs.dgsw.situsetting.utils.SettingUtil;
 
 public class HelpActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener {
 
-    private Switch mSwitch;
-    private SharedPreferences sp;
+    @Inject
+     SharedPreferences sp;
+    @Inject
+     NotificationUtil notificationUtil;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_help);
 
-        sp = getSharedPreferences(getString(R.string.preference_name), MODE_PRIVATE);
+        ActivityComponent component = DaggerActivityComponent.builder()
+                .appComponent(InitAppcliation.get(getApplicationContext()).getComponent())
+                .activityModule(new ActivityModule(this))
+                .build();
 
-        mSwitch = findViewById(R.id.switch1);
+        component.inject(this);
+
+        Switch mSwitch = findViewById(R.id.switch1);
         mSwitch.setChecked(sp.getBoolean(getString(R.string.notification_state), false));
         mSwitch.setOnCheckedChangeListener(this);
+
     }
 
     public void onInfoClick(View v) {
@@ -70,59 +86,9 @@ public class HelpActivity extends AppCompatActivity implements CompoundButton.On
         editor.putBoolean(getString(R.string.notification_state), b);
         editor.apply();
         if (b)
-            createNotification();
+            notificationUtil.createNotification();
         else
-            removeNotification();
+            notificationUtil.removeNotification();
     }
 
-
-    private void createNotification() {
-        Intent intentHome = new Intent(this, ApplyService.class);
-        intentHome.putExtra(ApplyService.EXTRA_SITUATION_ID, SettingSituation.HOME.getId());
-        Intent intentOutdoor = new Intent(this, ApplyService.class);
-        intentOutdoor.putExtra(ApplyService.EXTRA_SITUATION_ID, SettingSituation.OUTDOOR.getId());
-        Intent intentNight = new Intent(this, ApplyService.class);
-        intentNight.putExtra(ApplyService.EXTRA_SITUATION_ID, SettingSituation.NIGHT.getId());
-        Intent intentAlpha = new Intent(this, ApplyService.class);
-        intentAlpha.putExtra(ApplyService.EXTRA_SITUATION_ID, SettingSituation.ALPHA.getId());
-        Intent intentMain = new Intent(this, MainActivity.class);
-
-        PendingIntent pendingIntentHome = PendingIntent.getService(this, 1, intentHome, PendingIntent.FLAG_CANCEL_CURRENT);
-        PendingIntent pendingIntentOutdoor = PendingIntent.getService(this, 2, intentOutdoor, PendingIntent.FLAG_CANCEL_CURRENT);
-        PendingIntent pendingIntentNight = PendingIntent.getService(this, 3, intentNight, PendingIntent.FLAG_CANCEL_CURRENT);
-        PendingIntent pendingIntentAlpha = PendingIntent.getService(this, 4, intentAlpha, PendingIntent.FLAG_CANCEL_CURRENT);
-        PendingIntent pendingIntentMain = PendingIntent.getActivity(this, 5, intentMain, PendingIntent.FLAG_CANCEL_CURRENT);
-
-        RemoteViews notificationLayout = new RemoteViews(getPackageName(), R.layout.notification_small);
-        notificationLayout.setOnClickPendingIntent(R.id.noti_home, pendingIntentHome);
-        notificationLayout.setOnClickPendingIntent(R.id.noti_outdoor, pendingIntentOutdoor);
-        notificationLayout.setOnClickPendingIntent(R.id.noti_night, pendingIntentNight);
-        notificationLayout.setOnClickPendingIntent(R.id.noti_alpha, pendingIntentAlpha);
-        notificationLayout.setOnClickPendingIntent(R.id.noti_setting, pendingIntentMain);
-
-        Notification customNotification = new NotificationCompat.Builder(this, getString(R.string.notification_channelId))
-                .setSmallIcon(R.drawable.situsetting_noti_icon)
-                .setShowWhen(false)
-                .setCustomContentView(notificationLayout)
-                .setOnlyAlertOnce(true)
-                .build();
-
-        customNotification.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
-        createNotificationChannel();
-        NotificationManagerCompat.from(this).notify(1, customNotification);
-    }
-
-    private void removeNotification() {
-        NotificationManagerCompat.from(this).cancel(1);
-    }
-
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            int importance = NotificationManager.IMPORTANCE_LOW;
-            NotificationChannel channel = new NotificationChannel(getString(R.string.notification_channelId), "Situsetting", importance);
-            channel.setDescription("test notification channel");
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
 }
