@@ -32,7 +32,7 @@ public class NotificationUtil {
     private PendingIntent createPendingService(SettingSituation settingSituation) {
         Intent intent = new Intent(context, ApplyService.class);
         intent.putExtra(ApplyService.EXTRA_SITUATION_ID, settingSituation.getId());
-        return PendingIntent.getService(context, Integer.parseInt(settingSituation.getId()), intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        return PendingIntent.getService(context, (int) settingSituation.getId(), intent, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
     private void createNotification(Context context) {

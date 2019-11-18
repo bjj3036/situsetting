@@ -1,15 +1,15 @@
 package kr.hs.dgsw.situsetting;
 
 public enum SettingSituation {
-    HOME("1"), OUTDOOR("2"), NIGHT("3"), ALPHA("4");
+    HOME(1L), OUTDOOR(2L), NIGHT(3L), ALPHA(4L);
 
-    private String id;
+    private long id;
 
-    SettingSituation(String id) {
+    SettingSituation(long id) {
         this.id = id;
     }
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 }

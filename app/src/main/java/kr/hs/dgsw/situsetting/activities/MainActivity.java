@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import javax.inject.Inject;
 
+import io.reactivex.functions.Consumer;
 import kr.hs.dgsw.situsetting.InitAppcliation;
 import kr.hs.dgsw.situsetting.SettingRepository;
 import kr.hs.dgsw.situsetting.di.components.ActivityComponent;
@@ -23,8 +24,7 @@ import kr.hs.dgsw.situsetting.di.components.DaggerActivityComponent;
 import kr.hs.dgsw.situsetting.di.modules.ActivityModule;
 import kr.hs.dgsw.situsetting.utils.NotificationUtil;
 import kr.hs.dgsw.situsetting.R;
-import kr.hs.dgsw.situsetting.SettingBean;
-import kr.hs.dgsw.situsetting.SettingDBHelper;
+import kr.hs.dgsw.situsetting.room.entity.SettingBean;
 import kr.hs.dgsw.situsetting.SettingSituation;
 import kr.hs.dgsw.situsetting.utils.SettingUtil;
 
@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 10;
 
     @Inject
-    SettingRepository dbHelper;
+    SettingRepository settingRepository;
     @Inject
     SharedPreferences sp;
     @Inject
@@ -59,6 +59,14 @@ public class MainActivity extends AppCompatActivity {
             notificationUtil.createNotification();
 
         requestPermissions();
+
+        settingRepository.onCreate();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        settingRepository.onDestory();
     }
 
     private void firstBoot() {
@@ -102,39 +110,37 @@ public class MainActivity extends AppCompatActivity {
 
     public void onApplyClick(View v) {
         SettingBean setting;
+        Consumer<SettingBean> observer = settingBean -> settingUtil.applySetting(settingBean);
         switch (v.getId()) {
             case R.id.layout_home:
-                setting = dbHelper.selectSetting(SettingSituation.HOME);
+                settingRepository.selectSetting(SettingSituation.HOME.getId(), observer);
                 break;
             case R.id.layout_outdoor:
-                setting = dbHelper.selectSetting(SettingSituation.OUTDOOR);
+                settingRepository.selectSetting(SettingSituation.OUTDOOR.getId(), observer);
                 break;
             case R.id.layout_night:
-                setting = dbHelper.selectSetting(SettingSituation.NIGHT);
+                settingRepository.selectSetting(SettingSituation.NIGHT.getId(), observer);
                 break;
             case R.id.layout_alpha:
-                setting = dbHelper.selectSetting(SettingSituation.ALPHA);
+                settingRepository.selectSetting(SettingSituation.ALPHA.getId(), observer);
                 break;
             default:
                 setting = null;
         }
-        if (setting != null)
-            settingUtil.applySetting(setting);
-        else
-            Toast.makeText(this, "저장된 정보가 없습니다", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "저장된 정보가 없습니다", Toast.LENGTH_SHORT).show();
     }
 
     private void confirmSave(SettingSituation situation, String type) {
         SettingBean setting;
         try {
-            setting = settingUtil.getSetting();
+            setting = settingUtil.getSetting(situation);
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
             alertDialogBuilder
                     .setTitle("설정 저장")
                     .setMessage("현재의 설정을 " + type + "(으)로 저장하시겠습니까?")
                     .setCancelable(false)
                     .setPositiveButton("확인", (dialog, id) -> {
-                        dbHelper.insertSetting(situation, setting);
+                        settingRepository.insertSetting(setting);
                         dialog.cancel();
                     })
                     .setNegativeButton("취소", (dialog, id) -> {

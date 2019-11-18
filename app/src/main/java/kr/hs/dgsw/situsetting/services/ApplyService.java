@@ -9,12 +9,10 @@ import android.util.Log;
 import javax.inject.Inject;
 
 import kr.hs.dgsw.situsetting.InitAppcliation;
-import kr.hs.dgsw.situsetting.SettingDBHelper;
 import kr.hs.dgsw.situsetting.SettingRepository;
 import kr.hs.dgsw.situsetting.di.components.ActivityComponent;
 import kr.hs.dgsw.situsetting.di.components.DaggerActivityComponent;
 import kr.hs.dgsw.situsetting.di.modules.ActivityModule;
-import kr.hs.dgsw.situsetting.utils.NotificationUtil;
 import kr.hs.dgsw.situsetting.utils.SettingUtil;
 
 import static kr.hs.dgsw.situsetting.activities.MainActivity.TAG;
@@ -24,7 +22,7 @@ public class ApplyService extends Service {
     public static final String EXTRA_SITUATION_ID = "situationId";
 
     @Inject
-    SettingRepository dbHelper;
+    SettingRepository settingRepository;
     @Inject
     SettingUtil settingUtil;
 
@@ -37,12 +35,21 @@ public class ApplyService extends Service {
                 .build();
 
         component.inject(this);
+
+        settingRepository.onCreate();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        settingRepository.onDestory();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand: Alpha");
-        settingUtil.applySetting(dbHelper.selectSetting(intent.getStringExtra(EXTRA_SITUATION_ID)));
+        settingRepository.selectSetting(intent.getLongExtra(EXTRA_SITUATION_ID, -1),
+                settingBean -> settingUtil.applySetting(settingBean));
         return super.onStartCommand(intent, flags, startId);
     }
 

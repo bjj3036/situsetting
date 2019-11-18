@@ -1,6 +1,12 @@
-package kr.hs.dgsw.situsetting;
+package kr.hs.dgsw.situsetting.room.entity;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
+@Entity(tableName = "setting")
 public class SettingBean {
+    @PrimaryKey
+    private long situation;
     private int ringVolume;
     private int musicVolume;
     private int brightness;
@@ -46,6 +52,14 @@ public class SettingBean {
 
     public void setRingerMode(int ringerMode) {
         this.ringerMode = ringerMode;
+    }
+
+    public long getSituation() {
+        return situation;
+    }
+
+    public void setSituation(long situation) {
+        this.situation = situation;
     }
 
     @Override
